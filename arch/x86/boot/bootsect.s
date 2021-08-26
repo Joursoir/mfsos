@@ -22,7 +22,10 @@ _start2:
 	mov %dl, boot_drive			# BIOS stores our boot drive in DL,
 								# so we remember it
 
-	BIOS_PRINT $boot_os_msg
+	BIOS_PRINT $boot_real_mode_msg
+
+load_kernel:					# Load our kernel
+	BIOS_PRINT $boot_load_kern_msg
 
 	mov $0x02, %ah				# Set BIOS read sector routine
 	mov boot_drive, %dl			# Read drive number from $boot_drive
@@ -46,8 +49,11 @@ disk_error:
 	jmp .
 
 # Global variables
-boot_os_msg:
-	.asciz "Booting mfsos...\r\n"
+boot_real_mode_msg:
+	.asciz "Started mfsos in 16-bit real mode\r\n"
+
+boot_load_kern_msg:
+	.asciz "Loading kernel into memory\r\n"
 
 disk_error_msg:
 	.asciz "Disk read error!"
