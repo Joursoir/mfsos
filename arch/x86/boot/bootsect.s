@@ -109,6 +109,9 @@ gdt_data: 						# the data segment descriptor
 gdt_end:
 
 # Global variables
+boot_drive:
+	.byte 0
+
 gdt_descriptor:
 	# Size of GDT, always less one of the true size
 	.word gdt_end - gdt_start - 1
@@ -125,9 +128,6 @@ boot_load_kern_msg:
 
 disk_error_msg:
 	.asciz "Disk read error!"
-
-boot_drive:
-	.byte 0
 
 # Bootsector padding
 .space 512 - 2 - (. - _start), 0
