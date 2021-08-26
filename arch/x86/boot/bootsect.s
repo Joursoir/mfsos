@@ -113,9 +113,11 @@ boot_drive:
 	.byte 0
 
 gdt_descriptor:
-	# Size of GDT, always less one of the true size
+	# The 6-byte GDT structure containing:
+	# - GDT size, 2 bytes (size always less one of the real size):
 	.word gdt_end - gdt_start - 1
-	.long gdt_start 			# Start address of our GDT
+	# - GDT address, 4 bytes:
+	.long gdt_start
 
 boot_real_mode_msg:
 	.asciz "Started mfsos in 16-bit real mode\r\n"
