@@ -8,6 +8,7 @@
 .set CODESEG, gdt_code - gdt_start
 .set DATASEG, gdt_data - gdt_start
 
+.set SYSSEG, 0x1000				# Historical load address
 .set MAGIC, 0xAA55
 
 .section .text.bootentry		# Code that will start executing at
@@ -38,7 +39,7 @@ load_kernel:					# Load our kernel
 	mov $0x02, %cl				# Select sector 2 (next after the
 								# boot sector) [has a base of 1]
 	mov $0x01, %al				# Read 1 sectors
-	mov $0x9000, %bx			# Load sectors to ES:BS (0x9000)
+	mov $SYSSEG, %bx			# Load sectors to ES:BX (0:$SYSSEG)
 	int $0x13					# Start reading from drive
 	jc disk_error				# If carry flag set, bios failed to read
 
