@@ -46,11 +46,38 @@ load_kernel:					# Load our kernel
 	cmp %al, %al				# If AL(sect. read) != <>(sect. expected)
 	jne disk_error				# then return disk error
 
-	jmp . # TODO: jump into the darkness
+switch_to_pm:
+	BIOS_PRINT $boot_prot_mode_msg
+	cli							# Switch of interrupt until we have set
+								# up the protected mode interrupt vector
+	lgdt gdt_descriptor			# Load our global descriptor table
+
+	mov %cr0, %eax				# Set the first bit of CR0
+	or $0x01, %eax				# to make the switch to protected mode
+	mov %eax, %cr0
+
+	# Make a far jump to our 32-bit code.
+	# This also forces the CPU to flush its cache of pre-fetched
+	# and real-mode decoded instructions, which can cause problems
+	jmp $CODESEG, $init_pm
 
 disk_error:
 	BIOS_PRINT $disk_error_msg
 	jmp .
+
+.code32
+init_pm:
+	mov $DATASEG, %ax			# Point segment registers to the
+	mov %ax, %ds				# data selector we defined in our GDT
+	mov %ax, %es
+	mov %ax, %ss
+	mov %ax, %fs
+	mov %ax, %gs
+
+	mov $0x90000, %ebp			# Update stack position so it is right
+	mov %ebp, %esp				# at the top of the free space.
+
+	jmp . 						# infinite loop
 
 # Global Descriptor Table (contains 8-byte entries)
 gdt_start:
@@ -89,6 +116,9 @@ gdt_descriptor:
 
 boot_real_mode_msg:
 	.asciz "Started mfsos in 16-bit real mode\r\n"
+
+boot_prot_mode_msg:
+	.asciz "Entering 32-bit protected mode\r\n"
 
 boot_load_kern_msg:
 	.asciz "Loading kernel into memory\r\n"
