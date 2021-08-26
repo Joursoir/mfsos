@@ -13,11 +13,11 @@ _start:
 								# CS = 0 and IP = _start2
 _start2:
 	mov %cs, %ax				# AX = CS = 0 (see above)
-	mov %ax, %ds				# Zero segment registers		
+	mov %ax, %ds				# Zero segment registers
 	mov %ax, %es
-	mov %ax, %ss				# zero stack (?)
-	mov %ax, %sp				# zero stack pointer (?)
-								# Don't touch FS and GS register (why?)
+	mov %ax, %ss
+	mov %ax, %sp
+
 	cld							# Set direction flag for incrementing
 	mov %dl, boot_drive			# BIOS stores our boot drive in DL,
 								# so we remember it
