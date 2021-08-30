@@ -1,5 +1,7 @@
-#ifndef KERNEL_I386
-#define KERNEL_I386
+#ifndef ASM_X86_IO_H
+#define ASM_X86_IO_H
+
+#include <stdint.h>
 
 static inline void outb(uint16_t port, uint8_t data)
 {
@@ -10,4 +12,4 @@ static inline void outb(uint16_t port, uint8_t data)
 	);
 }
 
-#endif /* KERNEL_I386 */
+#endif /* ASM_X86_IO_H */
