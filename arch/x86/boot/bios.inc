@@ -1,3 +1,4 @@
+# CONVENTION: macro only uses %AX, %SI registers
 .macro BIOS_PRINT string
 	mov $0x0e, %ah				# Set writing char in TTY mode routine
 	mov \string, %si			# Set in Source Index reg the beginning
