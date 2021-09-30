@@ -1,14 +1,10 @@
 OSNAME = mfsos
 OSBIN = $(OSNAME).bin
+KERNBIN = kernel.bin
 
 ARCH = x86
 ARCH_BOOT = arch/$(ARCH)/boot
 BOOTBIN = $(ARCH_BOOT)/bootloader.bin
-
-OBJECTS = kernel/main.o
-LINKER = kernel/linker.ld
-BOOT_SRC = kernel/boot.s
-BOOT_OBJ = ${BOOT_SRC:.s=.o}
 
 TARGET_TOOLS = $(HOME)/path/to/cross/compiler/i686-elf-
 CC = $(TARGET_TOOLS)gcc
@@ -20,29 +16,42 @@ export AS
 OBJDUMP = $(TARGET_TOOLS)objdump
 export OBJDUMP
 
+C_SOURCES = \
+	kernel/main.c \
+	kernel/string.c \
+	drivers/video/console/vgacon.c
+OBJECTS = ${C_SOURCES:.c=.o}
+
 .PHONY: all qemu clean
 
 all: $(OSBIN)
 
-$(OSBIN): $(BOOT_OBJ) $(OBJECTS)
-	$(CC) -T $(LINKER) -o $(OSBIN) -ffreestanding -O2 -nostdlib \
-		$(OBJECTS) $(BOOT_OBJ) -lgcc
+$(OSBIN): $(BOOTBIN) $(KERNBIN)
+	cat $^ > $@
+	dd if=/dev/zero bs=512 count=15 >> $@
 
 $(BOOTBIN):
 	$(MAKE) -C $(ARCH_BOOT)
+
+$(KERNBIN): $(ARCH_BOOT)/head.o $(OBJECTS)
+	$(CC) -Wl,--oformat binary -Ttext 0x1000 -o $@ \
+		-ffreestanding -nostdlib \
+		$^ -lgcc
 
 %.o: %.s
 	$(AS) $< -o $@
 
 %.o: %.c
-	$(CC) -c $< -o $@ \
-		-std=gnu89 -ffreestanding -O2 -Wall \
-		-Wpedantic -Wextra
+	$(CC) -std=gnu89 -Wall -ffreestanding -nostdlib \
+		-I arch/$(ARCH)/include \
+		-I kernel \
+		-I drivers \
+		-c $< -o $@ -lgcc
 
 qemu: $(OSBIN)
 	qemu-system-i386 -kernel $(OSBIN)
 
 clean:
 	$(MAKE) -C $(ARCH_BOOT) clean
-	rm -rf $(BOOT_OBJ) $(OBJECTS)
-	rm -rf $(OSBIN)
+	rm -rf $(ARCH_BOOT)/head.o kernel/main.o
+	rm -rf $(KERNBIN) $(OSBIN) $(OBJECTS)
