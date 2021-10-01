@@ -19,8 +19,12 @@
 _start:
 	mov $SDATASEG, %ax
 	mov %ax, %ds
+	mov %ax, %ss
 	mov $KERNSEG, %ax
 	mov %ax, %es
+
+	mov $0xFF00, %bp			# Set up the stack at 0x9ff00
+	mov %bp, %sp
 
 	BIOS_PRINT $get_data_msg
 	# TODO: get memory size
