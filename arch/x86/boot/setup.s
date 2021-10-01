@@ -15,6 +15,10 @@
 .set CODESEG, gdt_code - gdt_start
 .set DATASEG, gdt_data - gdt_start
 
+# Keyboard Controller commands: 
+.set READ_OUTP, 0xD0			# Read Output Port
+.set WRITE_OUTP, 0xD1			# Write Output Port
+
 .global _start					# Make the symbol visible to ld
 _start:
 	mov $SDATASEG, %ax
@@ -44,10 +48,32 @@ load_kernel:					# Load our kernel
 	int $0x13					# Start reading from drive
 	jc disk_error				# If carry flag set, bios failed to read
 
-switch_to_pm:
-	BIOS_PRINT $boot_prot_mode_msg
 	cli							# Switch of interrupt until we have set
 								# up the protected mode interrupt vector
+
+enable_a20:
+	BIOS_PRINT $enable_a20_msg
+
+	call wait_input
+	mov $READ_OUTP, %al
+	out %al, $0x64 
+	call wait_output
+
+	in $0x60, %al				# Read input buffer and store on stack
+	push %ax
+	call wait_input
+
+	mov $WRITE_OUTP, %al
+	out %al, $0x64
+	call wait_input
+
+	pop %ax						# Pop the output port data from stack
+	or $2, %al					# Set bit 1 (A20) to enable
+	out %al, $0x60				# Write the data to the output port
+	call wait_input
+
+switch_to_pm:
+	BIOS_PRINT $boot_prot_mode_msg
 	lgdt gdt_descriptor			# Load our global descriptor table
 
 	mov %cr0, %eax				# Set the first bit of CR0
@@ -62,6 +88,18 @@ switch_to_pm:
 disk_error:
 	BIOS_PRINT $disk_error_msg
 	jmp .
+
+wait_input:
+	in $0x64, %al				# Read status
+	test $2, %al				# Is input buffer full?
+	jnz wait_input				# yes - continue waiting
+	ret
+
+wait_output:
+	in $0x64, %al
+	test $1, %al				# Is output buffer full?
+	jz wait_output				# no - continue waiting
+	ret
 
 # Global Descriptor Table (contains 8-byte entries)
 gdt_start:
@@ -108,6 +146,9 @@ boot_prot_mode_msg:
 
 boot_load_kern_msg:
 	.asciz "Loading kernel into memory\r\n"
+
+enable_a20_msg:
+	.asciz "Enabling A20 line\r\n"
 
 disk_error_msg:
 	.asciz "Disk read error!"
