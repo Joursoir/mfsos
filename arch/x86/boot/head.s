@@ -23,5 +23,13 @@ _start:
 	mov $0x90000, %ebp			# Update stack position so it is right
 	mov %ebp, %esp				# at the top of the free space.
 
+check_a20:
+	mov $0x112345, %edi			# Odd megabyte address
+	mov $0x012345, %esi			# Even megabyte address
+	mov %esi, (%esi)			# If A20 line is disabled two pointers
+	mov %edi, (%edi)			# would point to the address 0x012345
+	cmpsd						# Compare values at addresses
+	je .						# If equivalent, loop forever
+
 	call kernel_main
 	jmp . 						# infinite loop
