@@ -11,6 +11,8 @@
 .include "bios.inc"
 .include "rm_seg.inc"
 
+.set ENDSEG, KERNSEG + KERNSIZE	# Where to stop loading kernel
+
 # Define some constants for the GDT segment descriptor offsets
 .set CODESEG, gdt_code - gdt_start
 .set DATASEG, gdt_data - gdt_start
@@ -58,22 +60,89 @@ _start:
 load_kernel:					# Load our kernel
 	BIOS_PRINT $boot_load_kern_msg
 
-	mov $0x02, %ah				# Set BIOS read sector routine
-	mov (0), %dl				# Read drive boot
-	mov $0x00, %ch				# Select cylinder 0
-	mov $0x00, %dh				# Select head 0 [has a base of 0]
-	mov $0x02+SETUPLEN, %cl		# Select sector 2 (next after the
-								# boot sector) [has a base of 1]
-	mov $0x10, %al				# Read 16 sectors
-	mov $0x00, %bx				# Load sectors to ES:BX ($KERNSEG:0)
-	int $0x13					# Start reading from drive
-	jc disk_error				# If carry flag set, bios failed to read
+	# Load the system at $KERNSEG address:
+	mov $KERNSEG, %ax
+	mov %ax, %es				# ES - starting address segment
+	xor %bx, %bx				# BX is offset within segment
 
-	cli							# Switch of interrupt until we have set
-								# up the protected mode interrupt vector
+	# A few words about the algorithm:
+	# We read 0x10000 bytes (64 kB) and overflow BX (16 bytes register),
+	# then add 0x1000 to ES reg, after that compare with $ENDSEG
+	#
+	# If KERNSIZE != 0x10000 * N we read some unnecessary data, but
+	# i think it's not a problem
+repeat_read:
+	mov %es, %ax
+	cmp $ENDSEG, %ax
+	jae enable_a20				# Jump if AX >= $ENDSEG
+get_sects_for_read:
+	mov sectors, %ax			# AX = amount of sectors - current sector
+	sub csect, %ax				# AX has 6 significant bytes
+	mov %ax, %cx				# Calculate how many bytes we get by
+								# reading AX sectors
+	shl $9, %cx					# One sector = 2^9 = 512
+	add %bx, %cx				# CX = 0@@@.@@@0.0000.0000 + BX
+	jnc read_sects				# if not overflow, then jump
+	jz read_sects				# if CX = 0, then jump
+	xor %ax, %ax				# AX = 0
+	sub %bx, %ax				# AX = amount of sectors that we must
+	shr $9, %ax					# read for overflow BX
+read_sects:
+	call read_track				# INPUT: AX
+	mov %ax, %cx				# CX = amount of sectors that we read
+	add csect, %ax
+	cmp sectors, %ax			# Current sector = amount of sectors?
+	jne check_read				# If not equal, jump
+	mov chead, %ax
+	cmp heads, %ax				# Current head = amount of heads?
+	jne inc_chead				# If not equal, jump
+	movw $0xffff, chead			# Current head will overflow and equal 0
+								# after INC instuction in inc_chead
+	incw ctrack					# Go to next cylinder
+								# We don't check cylinder overflow
+								# because it makes no sense
+inc_chead:
+	incw chead
+	xor %ax, %ax
+check_read:
+	mov %ax, csect				# Calculate how many bytes we get by
+	shl $9, %cx					# reading AX sectors
+	add %cx, %bx				# Add it to BX
+	jnc repeat_read				# If BX not overflow, jjmp
+	mov %es, %ax
+	add $0x1000, %ax			# We read 0x10000 = 65536 bytes
+	mov %ax, %es
+	xor %bx, %bx
+	jmp repeat_read
+
+# INPUT:
+# AX - amount of sectors that we want to read
+read_track:
+	push %ax
+	push %bx
+	push %cx
+	push %dx
+	mov ctrack, %dx
+	mov csect, %cx				# Set sector
+	inc %cx						# Add +1 because sector has a base of 1
+	mov %dl, %ch				# Set cylinder
+	mov chead, %dh				# Set head
+	mov %dl, %dh
+	mov (0), %dl				# Set boot
+	mov $0x02, %ah				# Set BIOS read sector routine
+	int $0x13
+	jc .						# Error :(
+	pop %dx
+	pop %cx
+	pop %bx
+	pop %ax
+	ret
 
 enable_a20:
 	BIOS_PRINT $enable_a20_msg
+
+	cli							# Switch of interrupt until we have set
+								# up the protected mode interrupt vector
 
 	call wait_input
 	mov $READ_OUTP, %al
@@ -158,6 +227,14 @@ heads:							# 8 significant bytes
 	.word 0x0
 sectors:						# 6 significant bytes
 	.word 0x0
+
+# The number of the current component with which we interact:
+ctrack:							# track/cylinder
+	.word 0x0
+chead:
+	.word 0x0
+csect:
+	.word 1 + SETUPLEN
 
 gdt_descriptor:
 	# The 6-byte GDT structure containing:
