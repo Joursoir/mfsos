@@ -34,6 +34,13 @@ _start:
 
 	BIOS_PRINT $get_data_msg
 
+	# Get current cursor position
+	mov $0x3, %ah
+	xor	%bh, %bh				# Page Number = 0
+	int $0x10
+	add $3, %dh					# Add number of next BIOS_PRINTs
+	mov %dx, (2)				# Save it
+
 	# Get disk drive parameters
 	xor %ax, %ax
 	mov %ax, %es				# ES:DI = 0x0000:0x0000 to guard
