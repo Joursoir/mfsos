@@ -31,6 +31,27 @@ _start:
 	mov %bp, %sp
 
 	BIOS_PRINT $get_data_msg
+
+	# Get disk drive parameters
+	xor %ax, %ax
+	mov %ax, %es				# ES:DI = 0x0000:0x0000 to guard
+	mov %ax, %di				# against BIOS bugs
+	mov (0), %dl				# Set drive boot
+	mov $0x8, %ah
+	int $0x13
+	jc disk_error
+
+	# Interrupt return:
+	# - CH = low eight bits of maximum cylinder number
+	# - CL = maximum sector number (bits 5-0)
+	#        high two bits of maximum cylinder number (bits 7-6)
+	# - DH = maximum head number
+	xor %ch, %ch
+	and $0b00111111, %cl
+	xor %dl, %dl
+	mov %dx, heads
+	mov %cx, sectors
+
 	# TODO: get memory size
 	# TODO: get video infos
 
@@ -131,6 +152,13 @@ gdt_data: 						# the data segment descriptor
 gdt_end:
 
 # Global variables
+
+# Total amount of HDD components:
+heads:							# 8 significant bytes
+	.word 0x0
+sectors:						# 6 significant bytes
+	.word 0x0
+
 gdt_descriptor:
 	# The 6-byte GDT structure containing:
 	# - GDT size, 2 bytes (size always less one of the real size):
