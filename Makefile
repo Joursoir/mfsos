@@ -28,7 +28,7 @@ all: $(OSBIN)
 
 $(OSBIN): $(BOOTBIN) $(KERNBIN)
 	cat $^ > $@
-	dd if=/dev/zero bs=512 count=15 >> $@
+	dd if=/dev/zero bs=512 count=128 >> $@ # 65536
 
 $(BOOTBIN):
 	$(MAKE) -C $(ARCH_BOOT)
