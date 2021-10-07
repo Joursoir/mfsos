@@ -37,6 +37,7 @@ $(KERNBIN): $(ARCH_BOOT)/head.o $(OBJECTS)
 	$(CC) -Wl,--oformat binary -Ttext 0x1000 -o $@ \
 		-ffreestanding -nostdlib \
 		$^ -lgcc
+	printf "Kernel size: 0x%x\n" `stat -c "%s" $@`
 
 %.o: %.s
 	$(AS) $< -o $@
