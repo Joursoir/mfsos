@@ -22,7 +22,7 @@ C_SOURCES = \
 	drivers/video/console/vgacon.c
 OBJECTS = ${C_SOURCES:.c=.o}
 
-.PHONY: all qemu clean
+.PHONY: all qemu objdump-boot objdump-kernel clean
 
 all: $(OSBIN)
 
@@ -51,6 +51,13 @@ $(KERNBIN): $(ARCH_BOOT)/head.o $(OBJECTS)
 
 qemu: $(OSBIN)
 	qemu-system-i386 -kernel $(OSBIN)
+
+objdump-boot: $(BOOTBIN)
+	$(MAKE) -C $(ARCH_BOOT) objdump-bootsect objdump-setup
+
+objdump-kernel: $(KERNBIN)
+	$(OBJDUMP) -D -m i386 -b binary \
+		--adjust-vma=0x1000 -Maddr32,data32 $<
 
 clean:
 	$(MAKE) -C $(ARCH_BOOT) clean
