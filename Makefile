@@ -6,21 +6,21 @@ ARCH = x86
 ARCH_BOOT = arch/$(ARCH)/boot
 BOOTBIN = $(ARCH_BOOT)/bootloader.bin
 
-TARGET_TOOLS = $(HOME)/path/to/cross/compiler/i686-elf-
-CC = $(TARGET_TOOLS)gcc
-export CC
-LD = $(TARGET_TOOLS)ld
-export LD
-AS = $(TARGET_TOOLS)as
-export AS
-OBJDUMP = $(TARGET_TOOLS)objdump
-export OBJDUMP
+TARGET		= i686-elf
+TARGET_TOOLS	= $(PWD)/tools/toolchain/bin/$(TARGET)-
+
+CC	= $(TARGET_TOOLS)gcc
+LD	= $(TARGET_TOOLS)ld
+AS	= $(TARGET_TOOLS)as
+OBJDUMP	= $(TARGET_TOOLS)objdump
 
 C_SOURCES = \
 	kernel/main.c \
 	kernel/string.c \
 	drivers/video/console/vgacon.c
 OBJECTS = ${C_SOURCES:.c=.o}
+
+export CC LD AS OBJDUMP
 
 .PHONY: all qemu objdump-boot objdump-kernel clean
 
