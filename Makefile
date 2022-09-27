@@ -3,7 +3,7 @@ OSBIN = $(OSNAME).bin
 KERNBIN = kernel.bin
 
 ARCH = x86
-ARCH_BOOT = arch/$(ARCH)/boot
+ARCH_BOOT = arch/$(ARCH)/boot/bootloader
 BOOTBIN = $(ARCH_BOOT)/bootloader.bin
 
 TARGET		= i686-elf
