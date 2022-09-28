@@ -1,10 +1,17 @@
 OSNAME = mfsos
 OSBIN = $(OSNAME).bin
 KERNBIN = kernel.bin
+# Available options: `bootloader`, `multiboot`
+BOOT ?= bootloader
 
 ARCH = x86
-ARCH_BOOT = arch/$(ARCH)/boot/bootloader
+ARCH_BOOT = arch/$(ARCH)/boot/$(BOOT)
+
 BOOTBIN = $(ARCH_BOOT)/bootloader.bin
+OS_BINARIES = $(KERNBIN)
+ifeq ($(BOOT), bootloader)
+	OS_BINARIES := $(BOOTBIN) $(OS_BINARIES)
+endif
 
 TARGET		= i686-elf
 TARGET_TOOLS	= $(PWD)/tools/toolchain/bin/$(TARGET)-
@@ -26,7 +33,7 @@ export CC LD AS OBJDUMP
 
 all: $(OSBIN)
 
-$(OSBIN): $(BOOTBIN) $(KERNBIN)
+$(OSBIN): $(OS_BINARIES)
 	cat $^ > $@
 	dd if=/dev/zero bs=512 count=128 >> $@ # 65536
 
