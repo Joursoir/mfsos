@@ -5,6 +5,7 @@ KERNBIN = kernel.bin
 BOOT ?= bootloader
 
 ARCH = x86
+ARCH_INCLUDE = $(PWD)/arch/$(ARCH)/include
 ARCH_BOOT = arch/$(ARCH)/boot/$(BOOT)
 
 BOOTBIN = $(ARCH_BOOT)/bootloader.bin
@@ -28,6 +29,7 @@ C_SOURCES = \
 OBJECTS = ${C_SOURCES:.c=.o}
 
 export CC LD AS OBJDUMP
+export ARCH_INCLUDE
 
 .PHONY: all qemu objdump-boot objdump-kernel clean
 
