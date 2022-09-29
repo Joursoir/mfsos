@@ -1,3 +1,4 @@
+# head.s - bootstrap the kernel
 # https://www.gnu.org/software/grub/manual/multiboot/multiboot.html
 
 .include "bare_multiboot.h" # the file is auto-generated
