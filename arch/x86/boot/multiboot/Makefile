@@ -10,7 +10,10 @@ BARE_MULTIBOOT_HEADER = bare_multiboot.h
 
 .PHONY: all clean
 
-all: $(BARE_MULTIBOOT_HEADER)
+all: $(BARE_MULTIBOOT_HEADER) head.o
+
+head.o: head.s
+	$(AS) $< -o $@
 
 $(BARE_MULTIBOOT_HEADER): $(MULTIBOOT_HEADER)
 	$(CC) -E -dM -undef -fsyntax-only $(MULTIBOOT_HEADER) > $(BARE_MULTIBOOT_HEADER)
@@ -22,4 +25,4 @@ $(BARE_MULTIBOOT_HEADER): $(MULTIBOOT_HEADER)
 	sed -i 's/\>/,/2' $(BARE_MULTIBOOT_HEADER)
 
 clean:
-	rm $(BARE_MULTIBOOT_HEADER)
+	rm -f head.o $(BARE_MULTIBOOT_HEADER)
