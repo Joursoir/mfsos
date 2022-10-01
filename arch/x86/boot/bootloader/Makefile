@@ -9,7 +9,7 @@ BOOTBIN = bootloader.bin
 
 .PHONY: all objdump clean
 
-all: $(BOOTBIN)
+all: $(BOOTBIN) head.o
 
 $(BOOTBIN): bootsect.bin setup.bin
 	cat $^ > $@
@@ -36,4 +36,4 @@ objdump-setup:
 		--adjust-vma=0x2000 -Maddr16,data16 setup.bin
 
 clean:
-	rm -rf bootsect.o setup.o $(BOOTBIN)
+	rm -rf bootsect.o setup.o head.o $(BOOTBIN)
