@@ -4,7 +4,6 @@ ENTRY(_start)
 
 SECTIONS
 {
-	/* BIOS likes always to load the boot sector to the address 0x7c00,
-	where it is sure will not be occupied by important routines. */
-	. = 0x7c00;
+	/* Our bootloader loads kernel at 4 KiB */
+	. = 0x1000;
 }
