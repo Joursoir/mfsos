@@ -22,6 +22,7 @@ LD	= $(TARGET_TOOLS)ld
 AS	= $(TARGET_TOOLS)as
 OBJDUMP	= $(TARGET_TOOLS)objdump
 
+KERN_HEAD = $(ARCH_BOOT)/head.o
 C_SOURCES = \
 	kernel/main.c \
 	kernel/string.c \
@@ -39,17 +40,14 @@ $(OSBIN): $(OS_BINARIES)
 	cat $^ > $@
 	dd if=/dev/zero bs=512 count=128 >> $@ # 65536
 
-$(BOOTBIN):
+$(BOOTBIN) $(KERN_HEAD):
 	$(MAKE) -C $(ARCH_BOOT)
 
-$(KERNBIN): $(ARCH_BOOT)/head.o $(OBJECTS)
-	$(CC) -Wl,--oformat binary -Ttext 0x1000 -o $@ \
+$(KERNBIN): $(KERN_HEAD) $(OBJECTS)
+	$(CC) -T $(ARCH_BOOT)/linker.ld -o $@ \
 		-ffreestanding -nostdlib \
 		$^ -lgcc
 	printf "Kernel size: 0x%x\n" `stat -c "%s" $@`
-
-%.o: %.s
-	$(AS) $< -o $@
 
 %.o: %.c
 	$(CC) -std=gnu89 -Wall -ffreestanding -nostdlib \
@@ -70,5 +68,4 @@ objdump-kernel: $(KERNBIN)
 
 clean:
 	$(MAKE) -C $(ARCH_BOOT) clean
-	rm -rf $(ARCH_BOOT)/head.o kernel/main.o
-	rm -rf $(KERNBIN) $(OSBIN) $(OBJECTS)
+	rm -f $(KERNBIN) $(OSBIN) $(OBJECTS)
