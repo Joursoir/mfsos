@@ -1,4 +1,5 @@
 #include "video-vga.h"
+#include "gdt.h"
 
 /* Check if the compiler thinks you are targeting the wrong operating system. */
 #if defined(__linux__)
@@ -10,6 +11,8 @@
 #endif
 void kernel_main(void) 
 {
+	init_segmentation();
+
 	/* Initialize VGA video hardware */
 	vga_init();
 

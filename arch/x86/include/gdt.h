@@ -86,4 +86,6 @@ struct gdt_entry {
 	uint8_t base_high;
 } __attribute__((packed));
 
+void init_segmentation(void);
+
 #endif /* __X86_GDT_H */

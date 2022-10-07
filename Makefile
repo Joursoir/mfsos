@@ -5,6 +5,7 @@ KERNBIN = kernel.bin
 BOOT ?= bootloader
 
 ARCH = x86
+ARCH_PATH = arch/$(ARCH)
 ARCH_INCLUDE = $(PWD)/arch/$(ARCH)/include
 ARCH_BOOT = arch/$(ARCH)/boot/$(BOOT)
 
@@ -26,7 +27,8 @@ KERN_HEAD = $(ARCH_BOOT)/head.o
 C_SOURCES = \
 	kernel/main.c \
 	kernel/string.c \
-	drivers/video/console/vgacon.c
+	drivers/video/console/vgacon.c \
+	$(ARCH_PATH)/gdt.c
 OBJECTS = ${C_SOURCES:.c=.o}
 
 export CC LD AS OBJDUMP
