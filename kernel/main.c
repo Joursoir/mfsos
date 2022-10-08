@@ -1,4 +1,4 @@
-#include "video-vga.h"
+#include "video/console/vgacon.h"
 #include "gdt.h"
 
 /* Check if the compiler thinks you are targeting the wrong operating system. */
@@ -14,7 +14,7 @@ void kernel_main(void)
 	init_segmentation();
 
 	/* Initialize VGA video hardware */
-	vga_init();
+	vgacon_init();
 
-	vga_print("Welcome to MFSOS!\n\t");
+	vgacon_print("Welcome to MFSOS!\n");
 }
