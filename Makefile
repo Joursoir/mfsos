@@ -2,7 +2,7 @@ OSNAME = mfsos
 OSBIN = $(OSNAME).bin
 KERNBIN = kernel.bin
 # Available options: `bootloader`, `multiboot`
-BOOT ?= bootloader
+BOOT ?= multiboot
 
 ARCH = x86
 ARCH_PATH = arch/$(ARCH)
