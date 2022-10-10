@@ -1,3 +1,4 @@
+#include "multiboot.h"
 #include "video/console/vgacon.h"
 #include "gdt.h"
 
@@ -9,7 +10,8 @@
 #if !defined(__i386__)
 #error "This kernel needs to be compiled with a ix86-elf compiler"
 #endif
-void kernel_main(void) 
+
+void kernel_main(uint32_t magic, multiboot_info_t *multiboot)
 {
 	init_segmentation();
 

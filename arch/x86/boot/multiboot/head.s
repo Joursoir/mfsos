@@ -81,6 +81,11 @@ _start:
 	runtime support to work as well.
 	*/
 
+	/* Push the pointer to the Multiboot information structure. */
+	push %ebx
+	/* Push the magic value. */
+	push %eax
+
 	/*
 	Enter the high-level kernel. The ABI requires the stack is 16-byte
 	aligned at the time of the call instruction (which afterwards pushes
